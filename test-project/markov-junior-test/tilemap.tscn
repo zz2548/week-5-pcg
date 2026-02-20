@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://b3eh3b8chkcv2"]
+
+[ext_resource type="Texture2D" uid="uid://bu41jt7yw2r38" path="res://Water_tiles.png" id="1_nsmjb"]
+[ext_resource type="Script" uid="uid://b8dj0cnp6u42h" path="res://tilemap.gd" id="2_3qqdj"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_dqtar"]
+texture = ExtResource("1_nsmjb")
+2:2/0 = 0
+5:4/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_w2evn"]
+sources/0 = SubResource("TileSetAtlasSource_dqtar")
+
+[node name="tilemap" type="TileMap" unique_id=1593642375]
+tile_set = SubResource("TileSet_w2evn")
+format = 2
+script = ExtResource("2_3qqdj")
