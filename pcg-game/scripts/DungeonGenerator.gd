@@ -1,11 +1,6 @@
-# DungeonGenerator.gd
 class_name DungeonGenerator
 extends Node
-# Derived from https://github.com/mxgmn/MarkovJunior/blob/main/models/DungeonGrowth.xml
-# Pure data class — no visuals. Call generate_instant() then read grid, objects, player_pos, shop_pos.
 
-
-# -- Configuration ------------------------------------------------------------
 @export var width: int = 80
 @export var height: int = 45
 @export var max_rooms: int = 25
@@ -13,15 +8,15 @@ extends Node
 @export var explosive_chance: float = 0.35
 @export var item_chance: float      = 0.02
 @export var enemy_chance: float     = 0.015
+@export var enemy_safe_radius: int  = 10
+@export var item_safe_radius: int   = 25
 
-# -- Terrain cell values ------------------------------------------------------
 const WALL   = 1
 const BORDER = 2
 const PATH   = 4
 const FLOOR  = 5
 
-# -- Object values ------------------------------------------------------------
-const OBJ_NONE      = 0 
+const OBJ_NONE      = 0
 const OBJ_BARREL    = 1
 const OBJ_EXPLOSIVE = 2
 const OBJ_ITEM      = 3
@@ -29,16 +24,13 @@ const OBJ_ENEMY     = 4
 const OBJ_SHOPPOINT = 5
 const OBJ_PLAYER    = 6
 
-# -- Output data --------------------------------------------------------------
-var grid: Array    = []   # 2D Array[y][x] of terrain values
-var objects: Array = []   # 2D Array[y][x] of object values
-var rooms: Array   = []   # Array of Vector2i room centers
+var grid: Array    = []
+var objects: Array = []
+var rooms: Array   = []
 var player_pos: Vector2i
 var shop_pos: Vector2i
 
-# -- Room templates — 1 = floor, 0 = skip ------------------------------------
 const ROOM_TEMPLATES = [
-	# Rectangles
 	[[1,1],[1,1]],
 	[[1,1,1],[1,1,1],[1,1,1]],
 	[[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1]],
@@ -48,48 +40,39 @@ const ROOM_TEMPLATES = [
 	[[1,1,1,1,1,1,1]],
 	[[1],[1],[1],[1],[1],[1],[1]],
 	[[1,1],[1,1],[1,1],[1,1],[1,1],[1,1]],
-	# Plus / Cross
 	[[0,1,0],[1,1,1],[0,1,0]],
 	[[0,1,1,1,0],[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1],[0,1,1,1,0]],
 	[[0,0,1,1,1,0,0],[0,0,1,1,1,0,0],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1],[0,0,1,1,1,0,0],[0,0,1,1,1,0,0]],
 	[[0,1,1,0],[1,1,1,1],[1,1,1,1],[0,1,1,0],[0,1,1,0]],
 	[[0,0,1,1,0,0],[1,1,1,1,1,1],[1,1,1,1,1,1],[0,0,1,1,0,0]],
-	# L-shapes
 	[[1,1,0],[1,1,0],[1,1,1]],
 	[[1,1,0,0],[1,1,0,0],[1,1,0,0],[1,1,1,1],[1,1,1,1]],
 	[[1,1,1,0],[1,1,1,0],[1,1,1,1],[1,1,1,1]],
 	[[1,0,0,0],[1,0,0,0],[1,0,0,0],[1,0,0,0],[1,1,1,1]],
-	# T-shapes
 	[[1,1,1],[0,1,1],[0,1,1]],
 	[[1,1,1,1,1],[0,1,1,1,0],[0,1,1,1,0],[0,1,1,1,0]],
 	[[1,1,1,1,1,1,1],[0,0,1,1,1,0,0],[0,0,1,1,1,0,0]],
 	[[1,1,1,1,1],[0,0,1,0,0],[0,0,1,0,0]],
-	# Z / S
 	[[1,1,1,0],[0,1,1,0],[0,1,1,1]],
 	[[0,1,1,1],[0,1,1,0],[1,1,1,0]],
 	[[1,1,1,1,0,0],[0,1,1,1,0,0],[0,0,1,1,1,1]],
 	[[1,1,0],[1,1,0],[0,1,1],[0,1,1]],
-	# U-shapes
 	[[1,1,0,1,1],[1,1,0,1,1],[1,1,1,1,1]],
 	[[1,1,1,1],[1,1,0,0],[1,1,0,0],[1,1,1,1]],
 	[[1,1,0,0,1,1],[1,1,0,0,1,1],[1,1,0,0,1,1],[1,1,1,1,1,1]],
 	[[1,0,1],[1,0,1],[1,1,1]],
-	# Donuts / Rings
 	[[1,1,1,1,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[1,1,1,1,1]],
 	[[1,1,1,1,1,1,1],[1,0,0,0,0,0,1],[1,0,0,0,0,0,1],[1,0,0,0,0,0,1],[1,0,0,0,0,0,1],[1,0,0,0,0,0,1],[1,1,1,1,1,1,1]],
 	[[1,1,1,1,1,1,1],[1,1,1,1,1,1,1],[1,1,0,0,0,1,1],[1,1,0,0,0,1,1],[1,1,0,0,0,1,1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1]],
 	[[0,1,1,1,1,1,0],[1,1,0,0,0,1,1],[1,1,0,0,0,1,1],[0,1,1,1,1,1,0]],
 	[[1,1,1],[1,0,1],[1,1,1]],
-	# Diagonal / Steps
 	[[1,1,1,0,0],[1,1,1,0,0],[0,1,1,1,0],[0,0,1,1,1],[0,0,1,1,1]],
 	[[1,1,0,0,0],[1,1,1,0,0],[0,1,1,1,0],[0,0,1,1,1]],
 	[[1,1,1,0,0,0],[1,1,1,1,0,0],[0,1,1,1,1,0],[0,0,1,1,1,1]],
-	# Octagon / Diamond
 	[[0,1,1,1,0],[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1],[0,1,1,1,0]],
 	[[0,0,1,1,1,0,0],[0,1,1,1,1,1,0],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1],[0,1,1,1,1,1,0],[0,0,1,1,1,0,0]],
 	[[0,0,1,0,0],[0,1,1,1,0],[1,1,1,1,1],[0,1,1,1,0],[0,0,1,0,0]],
 	[[0,1,1,1,0],[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1],[0,1,1,1,0]],
-	# Irregular / Organic
 	[[0,1,1,1,0],[1,1,1,1,1],[1,1,1,1,0],[0,1,1,0,0]],
 	[[1,1,1,0,0],[1,1,1,1,0],[0,1,1,1,1],[0,0,1,1,1]],
 	[[1,1,1,1,1,0],[1,1,1,1,1,1],[0,1,1,1,1,1],[0,0,1,1,1,0]],
@@ -103,10 +86,6 @@ const ROOM_TEMPLATES = [
 	[[0,1,1,0],[1,1,1,1],[1,1,1,1],[0,1,1,0]],
 ]
 
-# =============================================================================
-# Public API
-# =============================================================================
-
 func generate_instant():
 	_init_grid()
 	_place_all_rooms()
@@ -115,10 +94,6 @@ func generate_instant():
 	_cull()
 	_populate()
 
-# =============================================================================
-# Phases
-# =============================================================================
-
 func _init_grid():
 	grid = []
 	objects = []
@@ -126,7 +101,7 @@ func _init_grid():
 	for y in height:
 		grid.append([])
 		objects.append([])
-		for x in width:
+		for _x in width:
 			grid[y].append(WALL)
 			objects[y].append(OBJ_NONE)
 	grid[height / 2][width / 2] = BORDER
@@ -209,32 +184,83 @@ func _cull():
 
 func _populate():
 	var floor_cells = get_cells_of_type(FLOOR)
-	floor_cells.shuffle()
 	var center = Vector2i(width / 2, height / 2)
 
-	# player spawns nearest to center
-	player_pos = _closest_floor_to(center, floor_cells)
+	player_pos = _best_open_spawn_near(center, floor_cells)
 	objects[player_pos.y][player_pos.x] = OBJ_PLAYER
 
-	# shop spawns farthest from center
-	shop_pos = _farthest_floor_from(center, floor_cells)
+	shop_pos = _farthest_floor_from(player_pos, floor_cells)
 	objects[shop_pos.y][shop_pos.x] = OBJ_SHOPPOINT
 
-	# scatter everything else
+	const NUM_KEYS         = 5
+	const GUARD_RADIUS     = 15
+	const GUARDS_PER_KEY   = 2
+
+	var zone_cols = 3
+	var zone_rows = 2
+	var zone_w = width  / zone_cols
+	var zone_h = height / zone_rows
+
+	var far_cells: Array = []
+	for cell in floor_cells:
+		if cell.distance_to(player_pos) >= item_safe_radius:
+			far_cells.append(cell)
+	far_cells.shuffle()
+
+	var placed_key_positions: Array = []
+	for row in range(zone_rows):
+		for col in range(zone_cols):
+			if placed_key_positions.size() >= NUM_KEYS:
+				break
+			var zone_x0 = col * zone_w
+			var zone_y0 = row * zone_h
+			var zone_x1 = zone_x0 + zone_w
+			var zone_y1 = zone_y0 + zone_h
+			var best_cell = Vector2i(-1, -1)
+			var best_open = -1
+			for cell in far_cells:
+				if cell.x < zone_x0 or cell.x >= zone_x1:
+					continue
+				if cell.y < zone_y0 or cell.y >= zone_y1:
+					continue
+				var too_close = false
+				for kp in placed_key_positions:
+					if cell.distance_to(kp) < 12:
+						too_close = true
+						break
+				if too_close:
+					continue
+				var openness = _count_open_floor_nearby(cell, 2)
+				if openness > best_open:
+					best_open = openness
+					best_cell = cell
+			if best_cell != Vector2i(-1, -1):
+				objects[best_cell.y][best_cell.x] = OBJ_ITEM
+				placed_key_positions.append(best_cell)
+
+	for kp in placed_key_positions:
+		var guards_placed = 0
+		var nearby: Array = []
+		for cell in floor_cells:
+			var d = cell.distance_to(kp)
+			if d >= 3 and d <= GUARD_RADIUS:
+				if cell.distance_to(player_pos) >= enemy_safe_radius:
+					if objects[cell.y][cell.x] == OBJ_NONE:
+						nearby.append(cell)
+		nearby.shuffle()
+		for cell in nearby:
+			if guards_placed >= GUARDS_PER_KEY:
+				break
+			objects[cell.y][cell.x] = OBJ_ENEMY
+			guards_placed += 1
+
+	floor_cells.shuffle()
 	for cell in floor_cells:
 		if objects[cell.y][cell.x] != OBJ_NONE:
 			continue
 		var roll = randf()
 		if roll < barrel_chance:
 			objects[cell.y][cell.x] = OBJ_EXPLOSIVE if randf() < explosive_chance else OBJ_BARREL
-		elif roll < barrel_chance + item_chance:
-			objects[cell.y][cell.x] = OBJ_ITEM
-		elif roll < barrel_chance + item_chance + enemy_chance:
-			objects[cell.y][cell.x] = OBJ_ENEMY
-
-# =============================================================================
-# Template helpers
-# =============================================================================
 
 func rotate_template_90(template: Array) -> Array:
 	var h = template.size()
@@ -276,10 +302,6 @@ func place_template(template: Array, tx: int, ty: int):
 func get_template_center(template: Array, tx: int, ty: int) -> Vector2i:
 	return Vector2i(tx + template[0].size() / 2, ty + template.size() / 2)
 
-# =============================================================================
-# General helpers
-# =============================================================================
-
 func get_cells_of_type(value: int) -> Array:
 	var result = []
 	for y in height:
@@ -303,6 +325,29 @@ func count_neighbors(x: int, y: int, value: int) -> int:
 				if grid[ny][nx] == value:
 					count += 1
 	return count
+
+func _count_open_floor_nearby(cell: Vector2i, r: int) -> int:
+	var count = 0
+	for dy in range(-r, r + 1):
+		for dx in range(-r, r + 1):
+			var nx = cell.x + dx
+			var ny = cell.y + dy
+			if nx >= 0 and nx < width and ny >= 0 and ny < height:
+				if grid[ny][nx] == FLOOR:
+					count += 1
+	return count
+
+func _best_open_spawn_near(target: Vector2i, floor_cells: Array) -> Vector2i:
+	var best_cell = floor_cells[0]
+	var best_score = -1
+	for cell in floor_cells:
+		if cell.distance_to(target) > 15:
+			continue
+		var openness = _count_open_floor_nearby(cell, 3)
+		if openness > best_score:
+			best_score = openness
+			best_cell = cell
+	return best_cell
 
 func _closest_floor_to(target: Vector2i, floor_cells: Array) -> Vector2i:
 	var best = floor_cells[0]

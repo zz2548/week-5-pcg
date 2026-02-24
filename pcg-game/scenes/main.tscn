@@ -3,6 +3,9 @@
 [ext_resource type="Script" uid="uid://bpy1nqwlogmn4" path="res://scripts/main.gd" id="1_0wfyh"]
 [ext_resource type="Texture2D" uid="uid://cbut6eqfdfymw" path="res://assets/Tileset.png" id="2_sugp2"]
 [ext_resource type="Script" uid="uid://ciweq6ahlsk3r" path="res://scripts/player.gd" id="3_sugp2"]
+[ext_resource type="Script" uid="uid://8tsq0taa1dt6" path="res://scenes/dark_overlay.gd" id="4_tbgi4"]
+[ext_resource type="Shader" uid="uid://ddewy7kcdpovw" path="res://assets/darkness.gdshader" id="5_tefeu"]
+[ext_resource type="Script" uid="uid://cexy6ntlfhvp3" path="res://scripts/hud.gd" id="6_tefeu"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_jyhfs"]
 texture = ExtResource("2_sugp2")
@@ -368,6 +371,15 @@ sources/0 = SubResource("TileSetAtlasSource_jyhfs")
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_sugp2"]
 size = Vector2(5, 5)
 
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_o6xl0"]
+shader = ExtResource("5_tefeu")
+shader_parameter/light_pos = Vector2(0.5, 0.5)
+shader_parameter/light_radius = 0.15
+shader_parameter/softness = 0.08
+shader_parameter/dark_color = Color(0, 0, 0, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_tbgi4"]
+
 [node name="Main" type="Node2D" unique_id=1403494565]
 script = ExtResource("1_0wfyh")
 
@@ -387,3 +399,34 @@ offset_right = 5.0
 offset_bottom = 5.0
 
 [node name="Camera2D" type="Camera2D" parent="Player" unique_id=2102631256]
+
+[node name="DarkOverlay" type="CanvasLayer" parent="." unique_id=671771595]
+layer = 10
+script = ExtResource("4_tbgi4")
+light_radius = 0.15
+
+[node name="ColorRect" type="ColorRect" parent="DarkOverlay" unique_id=1057632044]
+material = SubResource("ShaderMaterial_o6xl0")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HUD" type="CanvasLayer" parent="." unique_id=1994376983]
+layer = 20
+script = ExtResource("6_tefeu")
+
+[node name="KeyLabel" type="Label" parent="HUD" unique_id=1559303164]
+custom_minimum_size = Vector2(20, 20)
+offset_right = 40.0
+offset_bottom = 23.0
+text = "Keys: 0 / 5"
+label_settings = SubResource("LabelSettings_tbgi4")
+
+[node name="ExitLabel" type="Label" parent="HUD" unique_id=142964849]
+custom_minimum_size = Vector2(20, 60)
+offset_left = 2.0
+offset_top = 33.0
+offset_right = 42.0
+offset_bottom = 93.0
