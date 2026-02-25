@@ -216,8 +216,9 @@ animations = [{
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_so8tw"]
 size = Vector2(6.666667, 6.166667)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_srta7"]
-size = Vector2(10.666667, 14.666667)
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_srta7"]
+radius = 4.0
+height = 10.666667
 
 [node name="zombie1" type="CharacterBody2D" unique_id=398053063]
 scale = Vector2(0.75, 0.75)
@@ -256,7 +257,7 @@ position = Vector2(17.33334, 5.333333)
 shape = SubResource("RectangleShape2D_so8tw")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1247904432]
-position = Vector2(0, -3.3333335)
-shape = SubResource("RectangleShape2D_srta7")
+position = Vector2(0, -4)
+shape = SubResource("CapsuleShape2D_srta7")
 
 [connection signal="animation_finished" from="AnimatedSprite2D" to="." method="_on_animated_sprite_2d_animation_finished"]

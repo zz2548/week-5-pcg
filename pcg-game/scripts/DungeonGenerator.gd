@@ -74,6 +74,7 @@ var objects:    Array = []   # objects[y][x] → OBJ_ constant
 var rooms:      Array = []   # Vector2i room centres, used by _populate
 var player_pos: Vector2i     # set by _populate; read by main.gd to place the player
 var exit_pos:   Vector2i     # set by _populate; read by main.gd to place the exit
+var astar:      AStarGrid2D  # built by main.gd after generation; read by zombies
 
 # ─── Room templates ───────────────────────────────────────────────────────────
 # Mirrors the Room1–Room18 pattern files referenced by the XML <one> block.

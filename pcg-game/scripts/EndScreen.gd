@@ -23,6 +23,7 @@ func _ready() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not visible:
 		return
-	if can_restart and event.is_action_pressed("restart"):
-		get_tree().paused = false
-		get_tree().reload_current_scene()
+	if can_restart and event is InputEventKey:
+		if event.pressed and event.keycode == KEY_R:
+			get_tree().paused = false
+			get_tree().reload_current_scene()

@@ -16,6 +16,7 @@ var generator:      DungeonGenerator
 var keys_collected: int  = 0
 var exit_unlocked:  bool = false
 var exit_node:      Area2D = null
+var astar:          AStarGrid2D = null
 
 # =============================================================================
 # READY — generate, render, spawn
@@ -37,6 +38,22 @@ func _ready() -> void:
 	generator.generate_instant()
 	generator.add_to_group("generator")
 	add_child(generator)
+
+	# ── Build AStarGrid2D from the dungeon grid ───────────────────────────────
+	# One cell per tile; floor cells are walkable, walls are solid.
+	# Stored on the generator node so zombies can retrieve it via the group.
+	# Diagonal movement is disabled so zombies navigate axis-aligned corridors
+	# cleanly without trying to cut corners through wall geometry.
+	astar = AStarGrid2D.new()
+	astar.region = Rect2i(0, 0, generator.width, generator.height)
+	astar.cell_size = Vector2(TILE_SIZE, TILE_SIZE)
+	astar.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_NEVER
+	astar.update()
+	for y in generator.height:
+		for x in generator.width:
+			if generator.grid[y][x] != generator.FLOOR:
+				astar.set_point_solid(Vector2i(x, y), true)
+	generator.astar = astar
 
 	# ── Step 2: render tiles ─────────────────────────────────────────────────
 	_render_tilemap()
