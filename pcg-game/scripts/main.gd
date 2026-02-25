@@ -10,6 +10,7 @@ const ZOMBIE_SCENE := preload("res://scenes/zombie1.tscn")
 @onready var hud          = $HUD
 @export var zombie_type1_scene: PackedScene
 @export var zombie_type2_scene: PackedScene
+@onready var end_screen = $EndScreen
 
 var generator:      DungeonGenerator
 var keys_collected: int  = 0
@@ -171,12 +172,12 @@ func _on_exit_entered(body: Node2D) -> void:
 		_on_player_won()
 
 func _on_player_died() -> void:
-	print("Player died! (death screen coming soon)")
 	get_tree().paused = true
+	end_screen.show_lose()
 
 func _on_hp_changed(new_hp: int) -> void:
 	print("HP: ", new_hp)
 
 func _on_player_won() -> void:
-	print("Player escaped! (win screen coming soon)")
 	get_tree().paused = true
+	end_screen.show_win()       

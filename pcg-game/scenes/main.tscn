@@ -7,6 +7,7 @@
 [ext_resource type="Shader" uid="uid://ddewy7kcdpovw" path="res://assets/darkness.gdshader" id="5_tefeu"]
 [ext_resource type="Texture2D" uid="uid://cbo3qr6141tok" path="res://assets/Soldier.png" id="6_85g3d"]
 [ext_resource type="Script" uid="uid://cexy6ntlfhvp3" path="res://scripts/hud.gd" id="6_tefeu"]
+[ext_resource type="Script" uid="uid://c4nh642rswj5t" path="res://scripts/EndScreen.gd" id="8_tipki"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_jyhfs"]
 texture = ExtResource("2_sugp2")
@@ -649,7 +650,6 @@ shape = SubResource("RectangleShape2D_85g3d")
 
 [node name="DarkOverlay" type="CanvasLayer" parent="." unique_id=671771595]
 layer = 10
-visible = false
 script = ExtResource("4_tbgi4")
 light_radius = 0.15
 
@@ -678,5 +678,40 @@ offset_left = 2.0
 offset_top = 33.0
 offset_right = 42.0
 offset_bottom = 93.0
+
+[node name="EndScreen" type="CanvasLayer" parent="." unique_id=1056638561]
+process_mode = 2
+script = ExtResource("8_tipki")
+
+[node name="Dim" type="ColorRect" parent="EndScreen" unique_id=1216899795]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.6666667)
+
+[node name="Box" type="VBoxContainer" parent="EndScreen" unique_id=95697586]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TitleLabel" type="Label" parent="EndScreen/Box" unique_id=1368558597]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "WIN / YOU DIED"
+
+[node name="SubtitleLabel" type="Label" parent="EndScreen/Box" unique_id=1067894994]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "Press SPACE to reset"
 
 [connection signal="animation_finished" from="Player/AnimatedSprite2D" to="Player" method="_on_animated_sprite_2d_animation_finished"]
