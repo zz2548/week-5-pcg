@@ -1,18 +1,18 @@
 extends CharacterBody2D
 
-const SPEED = 120.0
-const MAX_HP = 3
+const SPEED = 105.0
+const MAX_HP = 10
 
 
 var facing := Vector2.RIGHT
 var hp: int = MAX_HP
 var invincible_timer: float = 0.0
-const INVINCIBLE_DURATION = 0.25
+const INVINCIBLE_DURATION = 1.0
 
 @onready var anim: AnimatedSprite2D = $AnimatedSprite2D
 @onready var attack_hitbox: Area2D = $AttackHitbox
 
-@export var attack_damage: int = 1
+@export var attack_damage: int = 2
 @export var attack_window: float = 0.15
 
 var dead := false
@@ -72,7 +72,7 @@ func _input(event: InputEvent) -> void:
 	if dead:
 		return
 
-	if event.is_action_pressed("attack") and locked_anim == "":
+	if event.is_action_pressed("attack") and locked_anim != "die" and locked_anim != "attack":
 		locked_anim = "attack"
 		anim.play("attack")
 

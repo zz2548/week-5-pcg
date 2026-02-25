@@ -8,13 +8,13 @@ var can_restart := true
 func show_lose() -> void:
 	visible = true
 	title.text = "YOU DIED"
-	subtitle.text = "Press Space to Restart"
+	subtitle.text = "Press R to Restart" # change R to your chosen key
 	can_restart = true
 
 func show_win() -> void:
 	visible = true
 	title.text = "YOU ESCAPED!"
-	subtitle.text = "Press Space to Restart"
+	subtitle.text = "Press R to Restart"
 	can_restart = true
 
 func _ready() -> void:
@@ -23,5 +23,6 @@ func _ready() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not visible:
 		return
-	if can_restart and event.is_action_pressed("ui_accept"):
+	if can_restart and event.is_action_pressed("restart"):
+		get_tree().paused = false
 		get_tree().reload_current_scene()

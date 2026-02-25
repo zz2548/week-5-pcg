@@ -508,7 +508,7 @@ animations = [{
 }],
 "loop": false,
 "name": &"attack",
-"speed": 5.0
+"speed": 8.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -629,7 +629,7 @@ shape = SubResource("RectangleShape2D_o6xl0")
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Player" unique_id=1121528612]
 scale = Vector2(0.75, 0.75)
 sprite_frames = SubResource("SpriteFrames_c6pm6")
-animation = &"walk"
+animation = &"attack"
 
 [node name="Camera2D" type="Camera2D" parent="Player" unique_id=2102631256]
 
@@ -650,6 +650,7 @@ shape = SubResource("RectangleShape2D_85g3d")
 
 [node name="DarkOverlay" type="CanvasLayer" parent="." unique_id=671771595]
 layer = 10
+visible = false
 script = ExtResource("4_tbgi4")
 light_radius = 0.15
 
