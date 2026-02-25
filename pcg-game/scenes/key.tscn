@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://bsqx4ecppefem" path="res://scripts/key_item.gd" id="1_fttkb"]
 [ext_resource type="Texture2D" uid="uid://dffse6lwr6guk" path="res://assets/key.png" id="2_wy8tx"]
+[ext_resource type="AudioStream" uid="uid://bdwgcwo4yujtf" path="res://assets/402288__lilmati__retro-coin-02.wav" id="3_wy8tx"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_fttkb"]
 atlas = ExtResource("2_wy8tx")
@@ -206,3 +207,8 @@ sprite_frames = SubResource("SpriteFrames_4j6cc")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1294252501]
 position = Vector2(0, 10)
 shape = SubResource("RectangleShape2D_f82af")
+
+[node name="PickupSound" type="AudioStreamPlayer2D" parent="." unique_id=1374856639]
+stream = ExtResource("3_wy8tx")
+volume_db = -10.0
+pitch_scale = 0.8

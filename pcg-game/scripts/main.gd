@@ -33,8 +33,10 @@ func _ready() -> void:
 	# and writes all spawn positions into generator.objects[y][x].
 	# main.gd never decides where anything goes — it only reads the results.
 	generator = DungeonGenerator.new()
-	generator.width  = 80
-	generator.height = 45
+	generator.width             = 160
+	generator.height            = 90
+	generator.max_rooms         = 50
+	generator.markov_iterations = 40
 	generator.generate_instant()
 	generator.add_to_group("generator")
 	add_child(generator)
@@ -72,6 +74,7 @@ func _ready() -> void:
 
 	hud.update_keys(0, KEYS_NEEDED)
 	hud.show_hint("Find all %d keys to unlock the exit!" % KEYS_NEEDED)
+	call_deferred("_init_hud_health")
 
 # =============================================================================
 # TILEMAP
@@ -196,8 +199,12 @@ func _on_player_died() -> void:
 	end_screen.show_lose()
 
 
+func _init_hud_health() -> void:
+	hud.update_health(player.hp, player.MAX_HP)
+
+
 func _on_hp_changed(new_hp: int) -> void:
-	print("HP: ", new_hp)
+	hud.update_health(new_hp, player.MAX_HP)
 
 
 func _on_player_won() -> void:
