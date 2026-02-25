@@ -50,8 +50,14 @@ var path_timer:    float = 0.0
 const PATH_INTERVAL: float = 0.4   # recalculate path this often (seconds)
 const TILE_SIZE:    int   = 16
 
-var player: Node2D         = null
+var player: Node2D              = null
 var generator: DungeonGenerator = null
+
+# Sound — plays once when the zombie first spots the player.
+# Assign an AudioStreamPlayer as a child named "AlertSound" and drop
+# a .wav/.ogg into its Stream property in the Godot editor.
+@onready var alert_sound: AudioStreamPlayer2D = $AlertSound if has_node("AlertSound") else null
+var has_alerted: bool = false   # prevents the sound re-firing every frame
 
 var hurt_timer: float = 0.0
 const HURT_DURATION: float = 0.4   # how long the hurt stun lasts
@@ -155,15 +161,18 @@ func _update_state() -> void:
 	var dist: float = global_position.distance_to(player.global_position)
 
 	if dist <= detection_radius:
-		# Only start a new attack if the cooldown has fully expired.
-		# This guarantees the zombie spends at least (attack_cooldown) seconds
-		# in CHASE before it can swing again, so it visibly re-approaches
-		# the player rather than spinning in place.
 		if dist <= attack_range and attack_cd_timer <= 0.0:
 			_start_attack()
 		else:
+			# First frame the zombie spots the player — play the alert sound once.
+			if state == State.ROAM and not has_alerted:
+				has_alerted = true
+				if alert_sound != null:
+					alert_sound.play()
 			state = State.CHASE
 	elif dist > detection_radius * 1.5:
+		# Player escaped — reset so the sound plays again next detection.
+		has_alerted = false
 		state = State.ROAM
 		_pick_roam_target()
 

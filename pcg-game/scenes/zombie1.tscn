@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://dw58i1rry8e6u" path="res://scripts/zombie.gd" id="1_httt1"]
 [ext_resource type="Texture2D" uid="uid://cmm74ifsrfgwb" path="res://assets/Orc.png" id="2_srta7"]
+[ext_resource type="AudioStream" uid="uid://b2fq8d3thqvt8" path="res://assets/goblin.mp3" id="3_88orx"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_88orx"]
 atlas = ExtResource("2_srta7")
@@ -168,7 +169,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_yl7hc")
 }],
-"loop": true,
+"loop": false,
 "name": &"die",
 "speed": 5.0
 }, {
@@ -229,8 +230,6 @@ attack_style = 0
 position = Vector2(1, -3)
 sprite_frames = SubResource("SpriteFrames_ipde4")
 animation = &"attack1"
-frame = 2
-frame_progress = 0.13151626
 
 [node name="AttackHitboxMid" type="Area2D" parent="." unique_id=4656261]
 monitoring = false
@@ -259,5 +258,8 @@ shape = SubResource("RectangleShape2D_so8tw")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1247904432]
 position = Vector2(0, -4)
 shape = SubResource("CapsuleShape2D_srta7")
+
+[node name="AlertSound" type="AudioStreamPlayer2D" parent="." unique_id=843274128]
+stream = ExtResource("3_88orx")
 
 [connection signal="animation_finished" from="AnimatedSprite2D" to="." method="_on_animated_sprite_2d_animation_finished"]

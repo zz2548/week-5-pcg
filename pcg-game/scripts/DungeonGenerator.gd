@@ -599,14 +599,32 @@ func _populate() -> void:
 		keys_placed += 1
 
 	# ── Enemies — exactly 5 ──────────────────────────────────────────────────
+	# Enemies must not spawn within (max_detection_radius + 5) pixels of the
+	# player.  Zombie detection_radius is randf_range(80, 160) at runtime, so
+	# the worst case is 160 px.  Adding 5 and converting to tiles:
+	# (160 + 5) / 16 = 10.3 → 11 tile minimum separation.
+	const ENEMY_SAFE_TILES: int = 11
 	var enemies_placed: int = 0
 	for cell in free:
 		if enemies_placed >= 5:
 			break
 		if objects[cell.y][cell.x] != OBJ_NONE:
 			continue
+		if cell.distance_to(player_pos) < ENEMY_SAFE_TILES:
+			continue
 		objects[cell.y][cell.x] = OBJ_ENEMY
 		enemies_placed += 1
+
+	# Fallback: if the map is very small and no cells satisfy the distance
+	# constraint, place remaining enemies anywhere free rather than skip them.
+	if enemies_placed < 5:
+		for cell in free:
+			if enemies_placed >= 5:
+				break
+			if objects[cell.y][cell.x] != OBJ_NONE:
+				continue
+			objects[cell.y][cell.x] = OBJ_ENEMY
+			enemies_placed += 1
 
 # =============================================================================
 # MARKOV PATHFINDER — _inertia_path
