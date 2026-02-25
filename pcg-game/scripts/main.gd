@@ -82,26 +82,87 @@ func _ready() -> void:
 
 func _render_tilemap() -> void:
 	# Reads generator.grid and sets tile atlas coordinates for every cell.
-	# Floor and wall tiles each have a small variant pool to break up repetition.
+	#
+	# Tileset.png layout (19 cols x 11 rows, 16x16px each, 0-indexed):
+	#
+	#  Main room block (cols 1-5, rows 1-5):
+	#    Outer ring  = wall/border tiles (light blue-grey)
+	#    Inner 3x3   = floor tiles       (dark blue)
+	#
+	#    (1,1) TL corner  (2,1)(3,1)(4,1) top edge    (5,1) TR corner
+	#    (1,2)(1,3)(1,4)  left edge                   (5,2)(5,3)(5,4) right edge
+	#    (1,5) BL corner  (2,5)(3,5)(4,5) bottom edge (5,5) BR corner
+	#    Interior floor:  (2,2)(3,2)(4,2)
+	#                     (2,3)(3,3)(4,3)
+	#                     (2,4)(3,4)(4,4)
+	#  Deep walls reuse the top-edge border tiles (2,1)(3,1)(4,1).
+
 	tilemap.clear()
+
+	# Floor: the 9 dark interior tiles of the room block
 	var floor_variants: Array = [
 		Vector2i(2,2), Vector2i(3,2), Vector2i(4,2),
 		Vector2i(2,3), Vector2i(3,3), Vector2i(4,3),
 		Vector2i(2,4), Vector2i(3,4), Vector2i(4,4),
 	]
-	var wall_variants: Array = [
-		Vector2i(1,1), Vector2i(2,1), Vector2i(3,1), Vector2i(4,1), Vector2i(5,1),
-		Vector2i(1,2), Vector2i(5,2),
-		Vector2i(1,3), Vector2i(5,3),
-		Vector2i(1,4), Vector2i(5,4),
-		Vector2i(1,5), Vector2i(2,5), Vector2i(3,5), Vector2i(4,5), Vector2i(5,5),
+
+	# Deep fill wall: use the top-edge border tiles from the room block
+	# for walls that have no adjacent floor (deep interior walls).
+	var wall_fill: Array = [
+		Vector2i(2,1), Vector2i(3,1), Vector2i(4,1),
 	]
+
 	for y in generator.height:
 		for x in generator.width:
 			if generator.grid[y][x] == generator.FLOOR:
-				tilemap.set_cell(0, Vector2i(x, y), 0, floor_variants[randi() % floor_variants.size()])
+				tilemap.set_cell(0, Vector2i(x, y), 0,
+					floor_variants[randi() % floor_variants.size()])
 			else:
-				tilemap.set_cell(0, Vector2i(x, y), 0, wall_variants[randi() % wall_variants.size()])
+				tilemap.set_cell(0, Vector2i(x, y), 0,
+					_get_wall_tile(x, y, wall_fill))
+
+
+# Returns the correct atlas tile for a wall cell based on cardinal floor neighbors.
+# Walls adjacent to floor get the matching border tile from the room-block outer ring.
+# Walls with no floor neighbor get a dark fill tile.
+func _get_wall_tile(x: int, y: int, wall_fill: Array) -> Vector2i:
+	var above := _tile_is_floor(x, y - 1)
+	var below := _tile_is_floor(x, y + 1)
+	var left  := _tile_is_floor(x - 1, y)
+	var right := _tile_is_floor(x + 1, y)
+
+	if not (above or below or left or right):
+		# No floor neighbor — deep solid wall
+		return wall_fill[randi() % wall_fill.size()]
+
+	# Corners: check two directions
+	if below and right and not above and not left:
+		return Vector2i(1, 1)  # top-left corner (floor is down+right)
+	if below and left and not above and not right:
+		return Vector2i(5, 1)  # top-right corner (floor is down+left)
+	if above and right and not below and not left:
+		return Vector2i(1, 5)  # bottom-left corner (floor is up+right)
+	if above and left and not below and not right:
+		return Vector2i(5, 5)  # bottom-right corner (floor is up+left)
+
+	# Edges: single dominant direction
+	if below and not above:
+		return Vector2i(randi_range(2, 4), 1)  # top edge  — floor below
+	if above and not below:
+		return Vector2i(randi_range(2, 4), 5)  # bottom edge — floor above
+	if right and not left:
+		return Vector2i(1, randi_range(2, 4))  # left edge  — floor to right
+	if left and not right:
+		return Vector2i(5, randi_range(2, 4))  # right edge — floor to left
+
+	# Surrounded on multiple sides — use a neutral border tile
+	return Vector2i(3, 1)
+
+
+func _tile_is_floor(x: int, y: int) -> bool:
+	if x < 0 or x >= generator.width or y < 0 or y >= generator.height:
+		return false
+	return generator.grid[y][x] == generator.FLOOR
 
 # =============================================================================
 # SPAWNING

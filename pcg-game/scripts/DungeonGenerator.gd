@@ -606,7 +606,7 @@ func _populate() -> void:
 	const ENEMY_SAFE_TILES: int = 11
 	var enemies_placed: int = 0
 	for cell in free:
-		if enemies_placed >= 5:
+		if enemies_placed >= 7:
 			break
 		if objects[cell.y][cell.x] != OBJ_NONE:
 			continue
