@@ -2,20 +2,27 @@ extends Node2D
 
 const TILE_SIZE   = 16
 const KEYS_NEEDED = 5
+const ZOMBIE_SCENE := preload("res://scenes/zombie1.tscn")
 
 @onready var tilemap      = $TileMap
 @onready var player       = $Player
 @onready var dark_overlay = $DarkOverlay
 @onready var hud          = $HUD
+@export var zombie_type1_scene: PackedScene
+@export var zombie_type2_scene: PackedScene
 
 var generator:      DungeonGenerator
 var keys_collected: int  = 0
 var exit_unlocked:  bool = false
 var exit_node:      Area2D = null
 
+
+const KEY_SCENE := preload("res://scenes/key.tscn")
+
+
 func _ready() -> void:
 	randomize()
-
+	
 	add_to_group("main")
 	player.add_to_group("player")
 
@@ -80,23 +87,8 @@ func _spawn_zombies() -> void:
 				))
 
 func _create_zombie(pos: Vector2) -> void:
-	var zombie = CharacterBody2D.new()
-	zombie.set_script(load("res://scripts/zombie.gd"))
-
-	var col = CollisionShape2D.new()
-	var shape = RectangleShape2D.new()
-	shape.size = Vector2(12, 12)
-	col.shape = shape
-	zombie.add_child(col)
-
-	var rect = ColorRect.new()
-	rect.size = Vector2(12, 12)
-	rect.position = Vector2(-6, -6)
-	rect.name = "ColorRect"
-	zombie.add_child(rect)
-
+	var zombie = ZOMBIE_SCENE.instantiate() as CharacterBody2D
 	zombie.position = pos
-	zombie.add_to_group("zombies")
 	add_child(zombie)
 
 
@@ -127,11 +119,9 @@ func _spawn_keys() -> void:
 			))
 
 func _create_key(pos: Vector2) -> void:
-	var key = Area2D.new()
-	key.set_script(load("res://scripts/key_item.gd"))
+	var key = KEY_SCENE.instantiate()
 	key.position = pos
 	add_child(key)
-
 
 func _spawn_exit() -> void:
 	exit_node = Area2D.new()
@@ -161,10 +151,7 @@ func _spawn_exit() -> void:
 func _physics_process(_delta: float) -> void:
 	for zombie in get_tree().get_nodes_in_group("zombies"):
 		var dist = zombie.global_position.distance_to(player.global_position)
-		if dist < 14.0:
-			if player.take_damage(zombie.damage):
-				if zombie.has_method("start_retreat"):
-					zombie.start_retreat()
+
 
 
 func _on_key_collected() -> void:
